@@ -13,6 +13,8 @@ public class Main {
 
     private static final String[] VALID_COMMANDS = {"/help", "/exit"};
 
+    private static final String ALLOWED_CHARS_REGEX = "[a-zA-Z0-9 +/*^()-]+";
+
     private static final Map<String, Integer> variables = new HashMap<>();
 
     public static void main(String[] args) {
@@ -43,8 +45,11 @@ public class Main {
         userInput = convertMinus(userInput);
         String[] userInputFields = userInput.split(" ");
 
-        if (userInputFields.length == 1) {
-            if (isValidIdentifier(userInputFields[0])) {
+        if (userInputFields.length == 1 && !hasOperators(userInput)) {
+            if (isNumeric(userInputFields[0])) {
+                System.out.println(userInputFields[0]);
+            }
+            else if (isValidIdentifier(userInputFields[0])) {
                 if (variables.containsKey(userInputFields[0])) {
                     System.out.println(variables.get(userInputFields[0]));
                 } else {
@@ -53,20 +58,25 @@ public class Main {
             } else {
                 System.out.println("Invalid identifier");
             }
-        } else if (isValidExpression(userInputFields)) {
-            String[] convertedExp = getVariableValues(userInputFields);
-            int total = Integer.parseInt(convertedExp[0]);
-            for (int i = 1; i < convertedExp.length; i += 2) {
-                int nextNumber = Integer.parseInt(convertedExp[i + 1]);
-                switch (convertedExp[i]) {
-                    case "+" -> total += nextNumber;
-                    case "-" -> total -= nextNumber;
-                }
-            }
-            System.out.println(total);
+        } else if (isValidExpression(userInput)) {
+//            String[] convertedExp = getVariableValues(userInputFields);
+//            int total = Integer.parseInt(convertedExp[0]);
+//            for (int i = 1; i < convertedExp.length; i += 2) {
+//                int nextNumber = Integer.parseInt(convertedExp[i + 1]);
+//                switch (convertedExp[i]) {
+//                    case "+" -> total += nextNumber;
+//                    case "-" -> total -= nextNumber;
+//                }
+//            }
+//            System.out.println(total);
         } else {
             System.out.println("Invalid expression");
         }
+    }
+
+    private static boolean hasOperators(String userInput) {
+        Matcher operatorsMatcher = Pattern.compile("[^-][+/*^()-]").matcher(userInput);
+        return operatorsMatcher.find();
     }
 
     private static String[] getVariableValues(String[] userInputFields) {
@@ -135,17 +145,36 @@ public class Main {
         }
     }
 
-    private static boolean isValidExpression(String[] userInputFields) {
-        for (int i = 0; i < userInputFields.length; i+= 2) {
-            if (!isNumeric(userInputFields[i])) {
-                if (!variables.containsKey(userInputFields[i])) {
-                    return false;
-                }
+    private static boolean isValidExpression(String userInput) {
+        Matcher allowedCharsMatcher = Pattern.compile(ALLOWED_CHARS_REGEX).matcher(userInput);
+        if (!allowedCharsMatcher.matches()) {
+            return false;
+        }
+
+        Matcher doubleDivOrMultMatcher = Pattern.compile("[/*]{2,}").matcher(userInput);
+        if (doubleDivOrMultMatcher.find()) {
+            return false;
+        }
+
+        int openBrackets = 0;
+        int closeBrackets = 0;
+        for (char c: userInput.toCharArray()) {
+            if (c == '(') {
+                openBrackets++;
+            }
+            if (c == ')') {
+                closeBrackets++;
             }
         }
-        if (userInputFields.length > 1) {
-            for (int i = 1; i < userInputFields.length; i += 2) {
-                if (!userInputFields[i].matches("[-+]")) {
+        if (openBrackets != closeBrackets) {
+            return false;
+        }
+
+        String[] userInputFields = userInput.replaceAll("[()]", "").split("\\s?[-+/*^]\\s?");
+
+        for (String field : userInputFields) {
+            if (!isNumeric(field)) {
+                if (!variables.containsKey(field)) {
                     return false;
                 }
             }
