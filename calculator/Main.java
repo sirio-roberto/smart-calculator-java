@@ -1,5 +1,7 @@
 package calculator;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,7 +14,7 @@ public class Main {
 
     private static final String ALLOWED_CHARS_REGEX = "[a-zA-Z0-9 +/*^()-]+";
 
-    private static final Map<String, Integer> variables = new HashMap<>();
+    private static final Map<String, BigInteger> variables = new HashMap<>();
 
     public static void main(String[] args) {
         runApp();
@@ -68,31 +70,31 @@ public class Main {
         }
     }
 
-    private static long evaluatePostfixExpression(List<String> postfixArray) {
+    private static BigInteger evaluatePostfixExpression(List<String> postfixArray) {
         Deque<String> stack = new ArrayDeque<>();
 
         for (String s: postfixArray) {
             if (isNumeric(s)) {
                 stack.offerLast(s);
             } else {
-                long num1 = Long.parseLong(stack.pollLast());
-                long num2 = Long.parseLong(stack.pollLast());
-                long result = evaluateExpression(num2, num1, s);
+                BigInteger num1 = new BigInteger(stack.pollLast());
+                BigInteger num2 = new BigInteger(stack.pollLast());
+                BigInteger result = evaluateExpression(num2, num1, s);
                 stack.offerLast(String.valueOf(result));
             }
         }
 
-        return Long.parseLong(stack.pollLast());
+        return new BigInteger(stack.pollLast());
     }
 
-    private static long evaluateExpression(long num1, long num2, String operator) {
+    private static BigInteger evaluateExpression(BigInteger num1, BigInteger num2, String operator) {
         return switch (operator) {
-            case "+" -> num1 + num2;
-            case "-" -> num1 - num2;
-            case "*" -> num1 * num2;
-            case "/" -> num1 / num2;
-            case "^" -> (long) Math.pow(num1, num2);
-            default -> 0;
+            case "+" -> num1.add(num2);
+            case "-" -> num1.subtract(num2);
+            case "*" -> num1.multiply(num2);
+            case "/" -> num1.divide(num2);
+            case "^" -> num1.pow(num2.intValue());
+            default -> BigInteger.ZERO;
         };
     }
 
@@ -171,7 +173,7 @@ public class Main {
             } else {
                 String valueStr = userInputFields[1];
                 if (isNumeric(valueStr)) {
-                    Integer value = Integer.valueOf(valueStr);
+                    BigInteger value = new BigInteger(valueStr);
                         variables.put(key, value);
                     } else {
                         if (isValidIdentifier(valueStr)) {
