@@ -13,7 +13,7 @@ public class Main {
 
     private static final String[] VALID_COMMANDS = {"/help", "/exit"};
 
-    private static Map<String, Integer> variables = new HashMap<>();
+    private static final Map<String, Integer> variables = new HashMap<>();
 
     public static void main(String[] args) {
         runApp();
@@ -39,16 +39,26 @@ public class Main {
     }
 
     private static void handleExpression(String userInput) {
-        // TODO: need to work on it
         userInput = removeExtraPluses(userInput);
         userInput = convertMinus(userInput);
         String[] userInputFields = userInput.split(" ");
 
-        if (isValidExpression(userInputFields)) {
-            int total = Integer.parseInt(userInputFields[0]);
-            for (int i = 1; i < userInputFields.length; i += 2) {
-                int nextNumber = Integer.parseInt(userInputFields[i + 1]);
-                switch (userInputFields[i]) {
+        if (userInputFields.length == 1) {
+            if (isValidIdentifier(userInputFields[0])) {
+                if (variables.containsKey(userInputFields[0])) {
+                    System.out.println(variables.get(userInputFields[0]));
+                } else {
+                    System.out.println("Unknown variable");
+                }
+            } else {
+                System.out.println("Invalid identifier");
+            }
+        } else if (isValidExpression(userInputFields)) {
+            String[] convertedExp = getVariableValues(userInputFields);
+            int total = Integer.parseInt(convertedExp[0]);
+            for (int i = 1; i < convertedExp.length; i += 2) {
+                int nextNumber = Integer.parseInt(convertedExp[i + 1]);
+                switch (convertedExp[i]) {
                     case "+" -> total += nextNumber;
                     case "-" -> total -= nextNumber;
                 }
@@ -57,6 +67,16 @@ public class Main {
         } else {
             System.out.println("Invalid expression");
         }
+    }
+
+    private static String[] getVariableValues(String[] userInputFields) {
+        String[] result = userInputFields.clone();
+        for (int i = 0; i < result.length; i += 2) {
+            if (!isNumeric(result[i])) {
+                result[i] = String.valueOf(variables.get(result[i]));
+            }
+        }
+        return result;
     }
 
     private static void handleAssignment(String userInput) {
@@ -90,7 +110,7 @@ public class Main {
     }
 
     private static boolean isNumeric(String value) {
-        Matcher numericMatcher = Pattern.compile("\\d+").matcher(value);
+        Matcher numericMatcher = Pattern.compile("[-+]?\\d+").matcher(value);
         return numericMatcher.matches();
     }
 
@@ -117,8 +137,10 @@ public class Main {
 
     private static boolean isValidExpression(String[] userInputFields) {
         for (int i = 0; i < userInputFields.length; i+= 2) {
-            if (!userInputFields[i].matches("[-+]?\\d+")) {
-                return false;
+            if (!isNumeric(userInputFields[i])) {
+                if (!variables.containsKey(userInputFields[i])) {
+                    return false;
+                }
             }
         }
         if (userInputFields.length > 1) {
