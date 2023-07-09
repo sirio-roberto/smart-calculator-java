@@ -1,9 +1,6 @@
 package calculator;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,19 +56,72 @@ public class Main {
                 System.out.println("Invalid identifier");
             }
         } else if (isValidExpression(userInput)) {
-//            String[] convertedExp = getVariableValues(userInputFields);
-//            int total = Integer.parseInt(convertedExp[0]);
-//            for (int i = 1; i < convertedExp.length; i += 2) {
-//                int nextNumber = Integer.parseInt(convertedExp[i + 1]);
-//                switch (convertedExp[i]) {
-//                    case "+" -> total += nextNumber;
-//                    case "-" -> total -= nextNumber;
-//                }
-//            }
-//            System.out.println(total);
+            userInput = removeAllSpaces(userInput);
+            String[] infixArray = convertToInfixArray(userInput);
+            getVariableValues(infixArray);
+
+            List<String> postfixArray = convertInfixToPostfix(infixArray);
+            System.out.println(postfixArray);
+
+            System.out.println(evaluatePostfixExpression(postfixArray));
         } else {
             System.out.println("Invalid expression");
         }
+    }
+
+    private static long evaluatePostfixExpression(List<String> postfixArray) {
+        return  1L;
+    }
+
+    private static List<String> convertInfixToPostfix(String[] infixArray) {
+        List<String> result = new ArrayList<>();
+        Deque<String> stack = new ArrayDeque<>();
+
+        for (String s: infixArray) {
+            if (isNumeric(s)) {
+                result.add(s);
+            } else if (isOperator(s)) {
+                if (stack.isEmpty() || "(".equals(stack.peekLast())) {
+                    stack.offerLast(s);
+                } else if (getPrecedence(s) > getPrecedence(stack.peekLast())) {
+                    stack.offerLast(s);
+                } else {
+                    while (stack.peekLast() != null && getPrecedence(stack.peekLast()) >= getPrecedence(s)) {
+                        result.add(stack.pollLast());
+                    }
+                    stack.offerLast(s);
+                }
+            } else if ("(".equals(s)) {
+                stack.offerLast(s);
+            } else if (")".equals(s)) {
+                while (stack.peekLast() != null && !"(".equals(stack.peekLast())) {
+                    result.add(stack.pollLast());
+                }
+                stack.pollLast();
+            }
+        }
+        while (!stack.isEmpty()) {
+            result.add(stack.pollLast());
+        }
+        return result;
+    }
+
+    private static int getPrecedence(String s) {
+        return switch (s) {
+            case "^" -> 3;
+            case "/", "*" -> 2;
+            case "+", "-" -> 1;
+            default -> 0;
+        };
+    }
+
+    private static boolean isOperator(String s) {
+        return s.matches("[-+/*^]");
+    }
+
+    private static String[] convertToInfixArray(String userInput) {
+        String pattern = "(?<=[+\\-*/^()])|(?=[+\\-*/^()])";
+        return userInput.split(pattern);
     }
 
     private static boolean hasOperators(String userInput) {
@@ -79,14 +129,12 @@ public class Main {
         return operatorsMatcher.find();
     }
 
-    private static String[] getVariableValues(String[] userInputFields) {
-        String[] result = userInputFields.clone();
-        for (int i = 0; i < result.length; i += 2) {
-            if (!isNumeric(result[i])) {
-                result[i] = String.valueOf(variables.get(result[i]));
+    private static void getVariableValues(String[] input) {
+        for (int i = 0; i < input.length; i++) {
+            if (isValidIdentifier(input[i])) {
+                input[i] = String.valueOf(variables.get(input[i]));
             }
         }
-        return result;
     }
 
     private static void handleAssignment(String userInput) {
@@ -120,6 +168,7 @@ public class Main {
     }
 
     private static boolean isNumeric(String value) {
+        // TODO: maybe we need to remove the sign part because it can break the infix transformation logic
         Matcher numericMatcher = Pattern.compile("[-+]?\\d+").matcher(value);
         return numericMatcher.matches();
     }
