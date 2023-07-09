@@ -12,19 +12,16 @@ public class Main {
     private static final String[] VALID_COMMANDS = {"/help", "/exit"};
 
     public static void main(String[] args) {
-        runSumLoop();
-        System.out.println("Bye!");
+        runApp();
     }
 
-    private static void runSumLoop() {
+    private static void runApp() {
         String userInput;
         do {
             userInput = SCAN.nextLine();
-            if (userInput.matches("/+.*") && !Arrays.asList(VALID_COMMANDS).contains(userInput)) {
-                System.out.println("Unknown command");
-            }
-            else if ("/help".equals(userInput)) {
-                System.out.println("The program calculates the sum and subtraction of numbers");
+
+            if (userInput.matches("/+.*")) {
+                handleCommands(userInput);
             }
             else if (!userInput.isBlank() && !"/exit".equals(userInput)) {
                 userInput = removeExtraSpacesAndPlus(userInput);
@@ -46,6 +43,17 @@ public class Main {
                 }
             }
         } while (!"/exit".equals(userInput));
+    }
+
+    private static void handleCommands(String userInput) {
+        if (userInput.matches("/+.*") && !Arrays.asList(VALID_COMMANDS).contains(userInput)) {
+            System.out.println("Unknown command");
+        } else if ("/help".equals(userInput)) {
+            // TODO: adjust helper text before last commit
+            System.out.println("The program calculates the sum and subtraction of numbers");
+        } else {
+            System.out.println("Bye!");
+        }
     }
 
     private static boolean isValidExpression(String[] userInputFields) {
