@@ -1,5 +1,6 @@
 package calculator;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
@@ -15,14 +16,16 @@ public class Main {
         String userInput;
         do {
             userInput = SCAN.nextLine();
-            if (!userInput.isBlank() && !"/exit".equals(userInput)) {
+            if ("/help".equals(userInput)) {
+                System.out.println("The program calculates the sum of numbers");
+            }
+            else if (!userInput.isBlank() && !"/exit".equals(userInput)) {
                 String[] userInputFields = userInput.split(" ");
-                if (userInputFields.length < 2) {
-                    System.out.println(userInputFields[0]);
+                if (Arrays.stream(userInputFields).allMatch(p -> p.matches("-?\\d+"))) {
+                    int sum = Arrays.stream(userInputFields).map(Integer::parseInt).reduce(0, Integer::sum);
+                    System.out.println(sum);
                 } else {
-                    int num1 = Integer.parseInt(userInputFields[0]);
-                    int num2 = Integer.parseInt(userInputFields[1]);
-                    System.out.println(num1 + num2);
+                    System.out.println("Only numbers are supported");
                 }
             }
         } while (!"/exit".equals(userInput));
