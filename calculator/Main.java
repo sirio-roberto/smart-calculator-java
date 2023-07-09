@@ -61,7 +61,6 @@ public class Main {
             getVariableValues(infixArray);
 
             List<String> postfixArray = convertInfixToPostfix(infixArray);
-            System.out.println(postfixArray);
 
             System.out.println(evaluatePostfixExpression(postfixArray));
         } else {
@@ -70,7 +69,31 @@ public class Main {
     }
 
     private static long evaluatePostfixExpression(List<String> postfixArray) {
-        return  1L;
+        Deque<String> stack = new ArrayDeque<>();
+
+        for (String s: postfixArray) {
+            if (isNumeric(s)) {
+                stack.offerLast(s);
+            } else {
+                long num1 = Long.parseLong(stack.pollLast());
+                long num2 = Long.parseLong(stack.pollLast());
+                long result = evaluateExpression(num2, num1, s);
+                stack.offerLast(String.valueOf(result));
+            }
+        }
+
+        return Long.parseLong(stack.pollLast());
+    }
+
+    private static long evaluateExpression(long num1, long num2, String operator) {
+        return switch (operator) {
+            case "+" -> num1 + num2;
+            case "-" -> num1 - num2;
+            case "*" -> num1 * num2;
+            case "/" -> num1 / num2;
+            case "^" -> (long) Math.pow(num1, num2);
+            default -> 0;
+        };
     }
 
     private static List<String> convertInfixToPostfix(String[] infixArray) {
