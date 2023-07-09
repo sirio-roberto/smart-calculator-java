@@ -24,7 +24,8 @@ public class Main {
                 handleCommands(userInput);
             }
             else if (!userInput.isBlank() && !"/exit".equals(userInput)) {
-                userInput = removeExtraSpacesAndPlus(userInput);
+                userInput = removeExtraSpaces(userInput);
+                userInput = removeExtraPluses(userInput);
                 userInput = convertMinus(userInput);
                 String[] userInputFields = userInput.split(" ");
 
@@ -85,12 +86,13 @@ public class Main {
         return String.join(" ", expressionArray);
     }
 
-    private static String removeExtraSpacesAndPlus(String userInput) {
-        Matcher matcherSpaces = Pattern.compile("\\s{2,}").matcher(userInput);
-        String result = matcherSpaces.replaceAll(" ");
+    private static String removeExtraSpaces(String userInput) {
+        Matcher spacesMatcher = Pattern.compile("\\s{2,}").matcher(userInput);
+        return spacesMatcher.replaceAll(" ");
+    }
 
-        Matcher matcherPlus = Pattern.compile("\\+{2,}").matcher(result);
-        result = matcherPlus.replaceAll("+");
-        return result;
+    private static String removeExtraPluses(String userInput) {
+        Matcher plusesMatcher = Pattern.compile("\\+{2,}").matcher(userInput);
+        return plusesMatcher.replaceAll("+");
     }
 }
