@@ -1,6 +1,8 @@
 package calculator;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,6 +12,8 @@ public class Main {
     private static final Scanner SCAN = new Scanner(System.in);
 
     private static final String[] VALID_COMMANDS = {"/help", "/exit"};
+
+    private static Map<String, Integer> variables = new HashMap<>();
 
     public static void main(String[] args) {
         runApp();
@@ -25,25 +29,79 @@ public class Main {
             }
             else if (!userInput.isBlank() && !"/exit".equals(userInput)) {
                 userInput = removeExtraSpaces(userInput);
-                userInput = removeExtraPluses(userInput);
-                userInput = convertMinus(userInput);
-                String[] userInputFields = userInput.split(" ");
-
-                if (isValidExpression(userInputFields)) {
-                    int total = Integer.parseInt(userInputFields[0]);
-                    for (int i = 1; i < userInputFields.length; i += 2) {
-                        int nextNumber = Integer.parseInt(userInputFields[i + 1]);
-                        switch (userInputFields[i]) {
-                            case "+" -> total += nextNumber;
-                            case "-" -> total -= nextNumber;
-                        }
-                    }
-                    System.out.println(total);
+                if (isAssignment(userInput)) {
+                    handleAssignment(userInput);
                 } else {
-                    System.out.println("Invalid expression");
+                    handleExpression(userInput);
                 }
             }
         } while (!"/exit".equals(userInput));
+    }
+
+    private static void handleExpression(String userInput) {
+        // TODO: need to work on it
+        userInput = removeExtraPluses(userInput);
+        userInput = convertMinus(userInput);
+        String[] userInputFields = userInput.split(" ");
+
+        if (isValidExpression(userInputFields)) {
+            int total = Integer.parseInt(userInputFields[0]);
+            for (int i = 1; i < userInputFields.length; i += 2) {
+                int nextNumber = Integer.parseInt(userInputFields[i + 1]);
+                switch (userInputFields[i]) {
+                    case "+" -> total += nextNumber;
+                    case "-" -> total -= nextNumber;
+                }
+            }
+            System.out.println(total);
+        } else {
+            System.out.println("Invalid expression");
+        }
+    }
+
+    private static void handleAssignment(String userInput) {
+        userInput = removeAllSpaces(userInput);
+        String[] userInputFields = userInput.split("=");
+        String key = userInputFields[0];
+
+        if (isValidIdentifier(key)) {
+            if (userInputFields.length != 2) {
+                System.out.println("Invalid assignment");
+            } else {
+                String valueStr = userInputFields[1];
+                if (isNumeric(valueStr)) {
+                    Integer value = Integer.valueOf(valueStr);
+                        variables.put(key, value);
+                    } else {
+                        if (isValidIdentifier(valueStr)) {
+                            if (variables.containsKey(valueStr)) {
+                                variables.put(key, variables.get(valueStr));
+                            } else {
+                                System.out.println("Unknown variable");
+                            }
+                        } else {
+                            System.out.println("Invalid assignment");
+                        }
+                    }
+                }
+            } else {
+                System.out.println("Invalid identifier");
+        }
+    }
+
+    private static boolean isNumeric(String value) {
+        Matcher numericMatcher = Pattern.compile("\\d+").matcher(value);
+        return numericMatcher.matches();
+    }
+
+    private static boolean isValidIdentifier(String key) {
+        Matcher lettersMatcher = Pattern.compile("[a-z]+", Pattern.CASE_INSENSITIVE).matcher(key);
+        return lettersMatcher.matches();
+    }
+
+    private static boolean isAssignment(String userInput) {
+        Matcher equalMatcher = Pattern.compile("=").matcher(userInput);
+        return equalMatcher.find();
     }
 
     private static void handleCommands(String userInput) {
@@ -86,8 +144,13 @@ public class Main {
         return String.join(" ", expressionArray);
     }
 
+    private static String removeAllSpaces(String userInput) {
+        Matcher allSpacesMatcher = Pattern.compile("\\s+").matcher(userInput);
+        return allSpacesMatcher.replaceAll("");
+    }
+
     private static String removeExtraSpaces(String userInput) {
-        Matcher spacesMatcher = Pattern.compile("\\s{2,}").matcher(userInput);
+        Matcher spacesMatcher = Pattern.compile("\\s{2,}").matcher(userInput.trim());
         return spacesMatcher.replaceAll(" ");
     }
 
